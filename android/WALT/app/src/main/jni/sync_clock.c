@@ -59,7 +59,7 @@ http://developer.android.com/reference/android/os/SystemClock.html
 https://android.googlesource.com/platform/system/core/+/master/libutils/Timers.cpp
 */
 int64_t uptimeMicros() {
-    struct timespec ts = {0};
+    struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return ((int64_t)ts.tv_sec) * kMillion + ts.tv_nsec / 1000;
 }
@@ -67,11 +67,11 @@ int64_t uptimeMicros() {
 
 // Sleeps us microseconds
 int microsleep(int us) {
-    struct timespec ts = {0};
+    struct timespec ts;
     ts.tv_sec = us / kMillion;
     us %= kMillion;
     ts.tv_nsec = us*1000;
-    nanosleep(&ts, NULL);
+    return nanosleep(&ts, NULL);
 }
 
 
@@ -109,7 +109,7 @@ static int bulk_talk(int fd, int endpoint, char * buffer, int length) {
     // short enough to fail quickly if all transfers and retries fail with
     // timeout.
     const int kTimeoutMs = 20;
-    struct usbdevfs_bulktransfer ctrl = {0};
+    struct usbdevfs_bulktransfer ctrl;
     // TODO: need to limit request size to avoid EINVAL
 
     ctrl.ep = endpoint;

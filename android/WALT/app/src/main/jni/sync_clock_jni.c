@@ -28,8 +28,8 @@ struct clock_connection clk;
 
 jlong
 Java_org_chromium_latency_walt_WaltUsbConnection_syncClock__III(
-    JNIEnv* env,
-    jobject thiz,
+    __attribute__((unused)) JNIEnv* env,
+    __attribute__((unused)) jobject thiz,
     jint fd,
     jint endpoint_out,
     jint endpoint_in

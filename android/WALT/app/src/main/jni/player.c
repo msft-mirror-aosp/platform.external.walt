@@ -102,7 +102,7 @@ void createWaveTables(){
 }
 
 // this callback handler is called every time a buffer finishes playing
-void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
+void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, __attribute__((unused)) void *context)
 {
     if (bq == NULL) {
         __android_log_print(ANDROID_LOG_ERROR, APPNAME, "buffer queue is null");
@@ -136,7 +136,8 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
     }
 }
 
-jlong Java_org_chromium_latency_walt_AudioTest_playTone(JNIEnv* env, jclass clazz){
+jlong Java_org_chromium_latency_walt_AudioTest_playTone(__attribute__((unused)) JNIEnv* env,
+                                                        __attribute__((unused)) jclass clazz){
 
     int64_t t_start = uptimeMicros();
     te_play = 0;
@@ -172,7 +173,8 @@ jlong Java_org_chromium_latency_walt_AudioTest_playTone(JNIEnv* env, jclass claz
 
 
 // create the engine and output mix objects
-void Java_org_chromium_latency_walt_AudioTest_createEngine(JNIEnv* env, jclass clazz)
+void Java_org_chromium_latency_walt_AudioTest_createEngine(__attribute__((unused)) JNIEnv* env,
+                                                           __attribute__((unused)) jclass clazz)
 {
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio engine");
 
@@ -204,7 +206,8 @@ void Java_org_chromium_latency_walt_AudioTest_createEngine(JNIEnv* env, jclass c
     (void)result;
 }
 
-void Java_org_chromium_latency_walt_AudioTest_destroyEngine(JNIEnv *env, jclass clazz)
+void Java_org_chromium_latency_walt_AudioTest_destroyEngine(__attribute__((unused)) JNIEnv *env,
+                                                            __attribute__((unused)) jclass clazz)
 {
     if (bqPlayerObject != NULL) {
         (*bqPlayerObject)->Destroy(bqPlayerObject);
@@ -223,8 +226,11 @@ void Java_org_chromium_latency_walt_AudioTest_destroyEngine(JNIEnv *env, jclass 
 }
 
 // create buffer queue audio player
-void Java_org_chromium_latency_walt_AudioTest_createBufferQueueAudioPlayer(JNIEnv* env,
-        jclass clazz, jint optimalFrameRate, jint optimalFramesPerBuffer)
+void Java_org_chromium_latency_walt_AudioTest_createBufferQueueAudioPlayer(
+        __attribute__((unused)) JNIEnv* env,
+        __attribute__((unused)) jclass clazz,
+        jint optimalFrameRate,
+        jint optimalFramesPerBuffer)
 {
     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Creating audio player with frame rate %d and frames per buffer %d",
                         optimalFrameRate, optimalFramesPerBuffer);
@@ -309,7 +315,8 @@ void Java_org_chromium_latency_walt_AudioTest_createBufferQueueAudioPlayer(JNIEn
     (void)result;
 }
 
-void Java_org_chromium_latency_walt_AudioTest_startWarmTest(JNIEnv* env, jclass clazz) {
+void Java_org_chromium_latency_walt_AudioTest_startWarmTest(__attribute__((unused)) JNIEnv* env,
+                                                            __attribute__((unused)) jclass clazz) {
     SLresult result;
 
     result = (*bqPlayerBufferQueue)->Clear(bqPlayerBufferQueue);
@@ -329,7 +336,8 @@ void Java_org_chromium_latency_walt_AudioTest_startWarmTest(JNIEnv* env, jclass 
     warmedUp = 1;
 }
 
-void Java_org_chromium_latency_walt_AudioTest_stopTests(JNIEnv *env, jclass clazz) {
+void Java_org_chromium_latency_walt_AudioTest_stopTests(__attribute__((unused)) JNIEnv *env,
+                                                        __attribute__((unused)) jclass clazz) {
     SLresult result;
 
     result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_STOPPED);
@@ -340,7 +348,8 @@ void Java_org_chromium_latency_walt_AudioTest_stopTests(JNIEnv *env, jclass claz
 }
 
 // this callback handler is called every time a buffer finishes recording
-void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
+void bqRecorderCallback(__attribute__((unused)) SLAndroidSimpleBufferQueueItf bq,
+                        __attribute__((unused)) void *context)
 {
     tc_rec = uptimeMicros();
     assert(bq == recorderBufferQueue);
@@ -362,8 +371,11 @@ void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 }
 
 // create audio recorder
-jboolean Java_org_chromium_latency_walt_AudioTest_createAudioRecorder(JNIEnv* env,
-    jclass clazz, jint optimalFrameRate, jint framesToRecord)
+jboolean Java_org_chromium_latency_walt_AudioTest_createAudioRecorder(
+        __attribute__((unused)) JNIEnv* env,
+        __attribute__((unused)) jclass clazz,
+        jint optimalFrameRate,
+        jint framesToRecord)
 {
     SLresult result;
 
@@ -460,7 +472,8 @@ jboolean Java_org_chromium_latency_walt_AudioTest_createAudioRecorder(JNIEnv* en
 
 
 // set the recording state for the audio recorder
-void Java_org_chromium_latency_walt_AudioTest_startRecording(JNIEnv* env, jclass clazz)
+void Java_org_chromium_latency_walt_AudioTest_startRecording(__attribute__((unused)) JNIEnv* env,
+                                                             __attribute__((unused)) jclass clazz)
 {
     SLresult result;
 
@@ -496,7 +509,9 @@ void Java_org_chromium_latency_walt_AudioTest_startRecording(JNIEnv* env, jclass
     bqPlayerRecorderBusy = 1;
 }
 
-jshortArray Java_org_chromium_latency_walt_AudioTest_getRecordedWave(JNIEnv *env, jclass cls)
+jshortArray Java_org_chromium_latency_walt_AudioTest_getRecordedWave(
+        JNIEnv *env,
+        __attribute__((unused)) jclass cls)
 {
     jshortArray result;
     result = (*env)->NewShortArray(env, recorder_frames);
@@ -507,14 +522,17 @@ jshortArray Java_org_chromium_latency_walt_AudioTest_getRecordedWave(JNIEnv *env
     return result;
 }
 
-jlong Java_org_chromium_latency_walt_AudioTest_getTcRec(JNIEnv *env, jclass cls) {
+jlong Java_org_chromium_latency_walt_AudioTest_getTcRec(__attribute__((unused)) JNIEnv *env,
+                                                        __attribute__((unused)) jclass cls) {
     return (jlong) tc_rec;
 }
 
-jlong Java_org_chromium_latency_walt_AudioTest_getTeRec(JNIEnv *env, jclass cls) {
+jlong Java_org_chromium_latency_walt_AudioTest_getTeRec(__attribute__((unused)) JNIEnv *env,
+                                                        __attribute__((unused)) jclass cls) {
     return (jlong) te_rec;
 }
 
-jlong Java_org_chromium_latency_walt_AudioTest_getTePlay(JNIEnv *env, jclass cls) {
+jlong Java_org_chromium_latency_walt_AudioTest_getTePlay(__attribute__((unused)) JNIEnv *env,
+                                                         __attribute__((unused)) jclass cls) {
     return (jlong) te_play;
 }
