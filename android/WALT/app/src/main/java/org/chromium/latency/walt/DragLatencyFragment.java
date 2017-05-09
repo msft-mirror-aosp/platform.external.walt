@@ -39,7 +39,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class DragLatencyFragment extends Fragment implements View.OnClickListener {
+public class DragLatencyFragment extends Fragment
+        implements View.OnClickListener, RobotAutomationListener {
 
     private SimpleLogger logger;
     private WaltDevice waltDevice;
@@ -329,6 +330,16 @@ public class DragLatencyFragment extends Fragment implements View.OnClickListene
 
         if (v.getId() == R.id.button_close_chart) {
             latencyChartLayout.setVisibility(View.GONE);
+        }
+    }
+
+    public void onRobotAutomationEvent(String event) {
+        if (event.equals(RobotAutomationListener.RESTART_EVENT)) {
+            onClick(restartButton);
+        } else if (event.equals(RobotAutomationListener.START_EVENT)) {
+            onClick(startButton);
+        } else if (event.equals(RobotAutomationListener.FINISH_EVENT)) {
+            onClick(finishButton);
         }
     }
 

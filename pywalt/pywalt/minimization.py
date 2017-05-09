@@ -21,7 +21,7 @@ QuickStep laser crossing timestamps
 """
 
 import numpy
-from . import evparser
+import evparser
 
 debug_mode = False
 
