@@ -68,8 +68,11 @@
 #define MIC_PIN 23        // Same as A9
 
 // Threshold and hysteresis for screen on/off reading
-#define SCREEN_THRESH_HIGH  110
-#define SCREEN_THRESH_LOW  90
+#define SCREEN_THRESH_HIGH  800
+#define SCREEN_THRESH_LOW   300
+
+// Shock threshold
+#define GSHOCK_THRESHOLD    500
 
 elapsedMicros time_us;
 
@@ -378,7 +381,7 @@ void loop() {
   // Probe the accelerometer
   if (gshock.probe) {
     int v = analogRead(G_PIN);
-    if (v > 900) {
+    if (v > GSHOCK_THRESHOLD) {
       gshock.t = time_us;
       gshock.count++;
       gshock.probe = false;

@@ -32,8 +32,8 @@ import java.net.SocketTimeoutException;
 
 public class WaltTcpConnection implements WaltConnection {
 
-    // The local ip on ARC++ to connect to underlying ChromeOS
-    private static final String SERVER_IP = "192.168.254.1";
+    // Use a "reverse" port over adb. The server is running on the host to which we're attached.
+    private static final String SERVER_IP = "127.0.0.1";
     private static final int SERVER_PORT = 50007;
     private static final int TCP_READ_TIMEOUT_MS = 200;
 
@@ -74,6 +74,10 @@ public class WaltTcpConnection implements WaltConnection {
     }
 
     public void connect() {
+        // If the singleton is already connected, do not kill the connection.
+        if (isConnected()) {
+            return;
+        }
         connectionState = Utils.ListenerState.STARTING;
         networkThread = new HandlerThread("NetworkThread");
         networkThread.start();
@@ -85,6 +89,7 @@ public class WaltTcpConnection implements WaltConnection {
                 try {
                     InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
                     socket = new Socket(serverAddr, SERVER_PORT);
+                    socket.setKeepAlive(true);
                     socket.setSoTimeout(TCP_READ_TIMEOUT_MS);
                     outputStream = socket.getOutputStream();
                     inputStream = socket.getInputStream();
@@ -119,18 +124,39 @@ public class WaltTcpConnection implements WaltConnection {
         return connectionState == Utils.ListenerState.RUNNING;
     }
 
-    public void sendByte(char c) throws IOException {
-        outputStream.write(Utils.char2byte(c));
+    public void sendByte(final char c) throws IOException {
+        // All network accesses must occur on a separate thread.
+        networkHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    outputStream.write(Utils.char2byte(c));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    public void sendString(String s) throws IOException {
-        outputStream.write(s.getBytes("UTF-8"));
+    public void sendString(final String s) throws IOException {
+        // All network accesses must occur on a separate thread.
+        networkHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    outputStream.write(s.getBytes("UTF-8"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public synchronized int blockingRead(byte[] buff) {
 
         messageReceived = false;
 
+        // All network accesses must occur on a separate thread.
         networkHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -171,8 +197,7 @@ public class WaltTcpConnection implements WaltConnection {
         return lastRetVal;
     }
 
-
-    private void updateClock(String cmd) throws IOException {
+    private synchronized void updateClock(String cmd) throws IOException {
         sendString(cmd);
         int retval = blockingRead(buffer);
         if (retval <= 0) {
@@ -181,8 +206,9 @@ public class WaltTcpConnection implements WaltConnection {
         String s = new String(buffer, 0, retval);
         String[] parts = s.trim().split("\\s+");
         // TODO: make sure reply starts with "clock"
-        long wallBaseTime = Long.parseLong(parts[1]);
-        remoteClock.baseTime = wallBaseTime - RemoteClockInfo.uptimeZero();
+        // The bridge sends the time difference between when it sent the reply and when it zeroed
+        // the WALT's clock. We assume here that the reply transit time is negligible.
+        remoteClock.baseTime = RemoteClockInfo.microTime() - Long.parseLong(parts[1]);
         remoteClock.minLag = Integer.parseInt(parts[2]);
         remoteClock.maxLag = Integer.parseInt(parts[3]);
     }

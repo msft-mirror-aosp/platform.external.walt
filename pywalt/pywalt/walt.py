@@ -48,9 +48,9 @@ import time
 import serial
 import numpy
 
-from . import evparser
-from . import minimization
-from . import screen_stats
+import evparser
+import minimization
+import screen_stats
 
 
 # Time units
@@ -620,14 +620,31 @@ class TcpServer:
         # Discard any empty data
         if not data or len(data) == 0:
             print('o<: discarded empty data')
-            return None
+            return
 
         # Get a string version of the data for checking longer commands
         s = data.decode(self.walt.encoding)
-        if s.startswith('bridge'):
-            log('bridge command: %s, pausing ser2net thread...' % s)
+        bridge_command = None
+        while len(s) > 0:
+            if not bridge_command:
+                bridge_command = re.search(r'bridge (sync|update)', s)
+            # If a "bridge" command does not exist, send everything to the WALT
+            if not bridge_command:
+                self.walt.ser.write(s.encode(self.walt.encoding))
+                break
+            # If a "bridge" command is preceded by WALT commands, send those
+            # first
+            if bridge_command.start() > 0:
+                before_command = s[:bridge_command.start()]
+                log('found bridge command after "%s"' % before_command)
+                s = s[bridge_command.start():]
+                self.walt.ser.write(before_command.encode(self.walt.encoding))
+                continue
+            # Otherwise, reply directly to the command
+            log('bridge command: %s, pausing ser2net thread...' %
+                    bridge_command.group(0))
             self.pause()
-            is_sync = 'sync' in s
+            is_sync = bridge_command.group(1) == 'sync' or not self.walt.base_time
             if is_sync:
                 self.walt.zero_clock()
 
@@ -638,16 +655,16 @@ class TcpServer:
                 self.walt.max_lag -= self.walt.min_lag
                 self.walt.min_lag = 0
 
-            t0 = self.walt.base_time * 1e6
             min_lag = self.walt.min_lag * 1e6
             max_lag = self.walt.max_lag * 1e6
-            reply = 'clock %d %d %d\n' % (t0, min_lag, max_lag)
-            print('|custom-reply>: ' + repr(reply))
+            # Send the time difference between now and when the clock was zeroed
+            dt0 = (time.time() - self.walt.base_time) * 1e6
+            reply = 'clock %d %d %d\n' % (dt0, min_lag, max_lag)
             self.net.sendall(reply)
+            print('|custom-reply>: ' + repr(reply))
             self.resume()
-            return None
-
-        return data
+            s = s[bridge_command.end():]
+            bridge_command = None
 
     def connections_loop(self):
         with contextlib.closing(socket.socket(
@@ -655,6 +672,7 @@ class TcpServer:
             self.sock = sock
             # SO_REUSEADDR is supposed to prevent the "Address already in use" error
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             sock.bind((self.host, self.port))
             sock.listen(1)
             while True:
@@ -677,10 +695,7 @@ class TcpServer:
             data = self.net.recv(1024)
             if not data:
                 break  # got disconnected
-
-            data = self.net2ser(data)
-            if(data):
-                self.walt.ser.write(data)
+            self.net2ser(data)
 
     def ser2net_loop(self):
         while True:

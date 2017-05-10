@@ -53,7 +53,8 @@ import static org.chromium.latency.walt.Utils.getIntPreference;
 /**
  * Measurement of screen response time when switching between black and white.
  */
-public class ScreenResponseFragment extends Fragment implements View.OnClickListener {
+public class ScreenResponseFragment extends Fragment
+        implements View.OnClickListener, RobotAutomationListener {
 
     private static final int CURVE_TIMEOUT = 1000;  // milliseconds
     private static final int CURVE_BLINK_TIME = 250;  // milliseconds
@@ -248,13 +249,12 @@ public class ScreenResponseFragment extends Fragment implements View.OnClickList
             Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
                 @Override
                 public void doFrame(long frameTimeNanos) {
-                    // frameTimeNanos is he time in nanoseconds when the frame started being
+                    // frameTimeNanos is the time in nanoseconds when the frame started being
                     // rendered, in the nanoTime() timebase.
                     lastFrameStartTime = frameTimeNanos / 1000 - waltDevice.clock.baseTime;
                     lastFrameCallbackTime = System.nanoTime() / 1000 - waltDevice.clock.baseTime;
                 }
             });
-
 
             // Repost doBlink to some far away time to blink again even if nothing arrives from
             // Teensy. This callback will almost always get cancelled by onIncomingTimestamp()
@@ -290,9 +290,9 @@ public class ScreenResponseFragment extends Fragment implements View.OnClickList
                 }
             }
 
-            final long startTimeMicros = lastFrameStartTime + waltDevice.clock.baseTime;
-            final long finishTimeMicros = tmsg.t + waltDevice.clock.baseTime;
             if (traceLogger != null) {
+                final long startTimeMicros = lastFrameStartTime + waltDevice.clock.baseTime;
+                final long finishTimeMicros = tmsg.t + waltDevice.clock.baseTime;
                 traceLogger.log(startTimeMicros, finishTimeMicros,
                         isBoxWhite ? "Black-to-white" : "White-to-black",
                         "Bar starts at beginning of frame and ends when photosensor detects blink");
@@ -420,6 +420,18 @@ public class ScreenResponseFragment extends Fragment implements View.OnClickList
         if (v.getId() == R.id.button_close_chart) {
             brightnessChartLayout.setVisibility(View.GONE);
             return;
+        }
+    }
+
+    public void onRobotAutomationEvent(String event) {
+        // Never show the latency chart during automated runs.
+        shouldShowLatencyChart = false;
+        // Disable full-screen mode to prevent modal user dialog.
+        enableFullScreen = false;
+        if (event.equals(RobotAutomationListener.RESTART_EVENT)) {
+            onClick(stopButton);
+        } else if (event.equals(RobotAutomationListener.START_EVENT)) {
+            onClick(startButton);
         }
     }
 
