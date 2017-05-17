@@ -65,6 +65,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "WALT";
     private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_SHARE_LOG = 2;
     private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_SYSTRACE = 3;
+    private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_WRITE_LOG = 4;
+    private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_CLEAR_LOG = 5;
+
+    private static final String LOG_FILENAME = "qstep_log.txt";
 
     private Toolbar toolbar;
     LocalBroadcastManager broadcastManager;
@@ -73,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
     public Menu menu;
 
     public Handler handler = new Handler();
+
+    private Fragment mRobotAutomationFragment;
 
 
     /**
@@ -131,6 +137,41 @@ public class MainActivity extends AppCompatActivity {
             Fragment autoRunFragment = new AutoRunFragment();
             autoRunFragment.setArguments(intent.getExtras());
             switchScreen(autoRunFragment, "Automated Test");
+        }
+
+        // Handle robot automation originating from adb shell am
+        if (intent != null && Intent.ACTION_SEND.equals(intent.getAction())) {
+            Log.e(TAG, "Received Intent: " + intent.toString());
+            String test = intent.getStringExtra("StartTest");
+            if (test != null) {
+                Log.e(TAG, "Extras \"StartTest\" = " + test);
+                if ("TapLatencyTest".equals(test)) {
+                    mRobotAutomationFragment = new TapLatencyFragment();
+                    switchScreen(mRobotAutomationFragment, "Tap Latency");
+                } else if ("ScreenResponseTest".equals(test)) {
+                    mRobotAutomationFragment = new ScreenResponseFragment();
+                    switchScreen(mRobotAutomationFragment, "Screen Response");
+                } else if ("DragLatencyTest".equals(test)) {
+                    mRobotAutomationFragment = new DragLatencyFragment();
+                    switchScreen(mRobotAutomationFragment, "Drag Latency");
+                }
+            }
+
+            String robotEvent = intent.getStringExtra("RobotAutomationEvent");
+            if (robotEvent != null && mRobotAutomationFragment != null) {
+                Log.e(TAG, "Received robot automation event=\"" + robotEvent + "\", Fragment = " +
+                        mRobotAutomationFragment);
+                // Writing and clearing the log is not fragment-specific, so handle them here.
+                if (robotEvent.equals(RobotAutomationListener.WRITE_LOG_EVENT)) {
+                    attemptSaveLog();
+                } else if (robotEvent.equals(RobotAutomationListener.CLEAR_LOG_EVENT)) {
+                    attemptClearLog();
+                } else {
+                    // All other robot automation events are forwarded to the current fragment.
+                    ((RobotAutomationListener) mRobotAutomationFragment)
+                            .onRobotAutomationEvent(robotEvent);
+                }
+            }
         }
     }
 
@@ -389,6 +430,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void attemptSaveLog() {
+        int currentPermission = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (currentPermission == PackageManager.PERMISSION_GRANTED) {
+            saveLogToFile();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_WRITE_LOG);
+        }
+    }
+
+    private void attemptClearLog() {
+        int currentPermission = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (currentPermission == PackageManager.PERMISSION_GRANTED) {
+            clearLogFile();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_CLEAR_LOG);
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -400,6 +465,12 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_SHARE_LOG:
                 attemptSaveAndShareLog();
+                break;
+            case PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_WRITE_LOG:
+                attemptSaveLog();
+                break;
+            case PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE_CLEAR_LOG:
+                attemptClearLog();
                 break;
         }
     }
@@ -414,22 +485,19 @@ public class MainActivity extends AppCompatActivity {
         // is frowned upon, but deliberately giving permissions as part of the intent is
         // way too cumbersome.
 
-        String fname = "qstep_log.txt";
         // A reasonable world readable location,on many phones it's /storage/emulated/Documents
         // TODO: make this location configurable?
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         File file = null;
         FileOutputStream outStream = null;
 
-        Date now = new Date();
-        logger.log("Saving log to:\n" + path.getPath() + "/" + fname);
-        logger.log("On: " + now.toString());
-
         try {
             if (!path.exists()) {
                 path.mkdirs();
             }
-            file = new File(path, fname);
+            file = new File(path, LOG_FILENAME);
+            logger.log("Saving log to: " + file + " at " + new Date());
+
             outStream = new FileOutputStream(file);
             outStream.write(logger.getLogText().getBytes());
 
@@ -437,9 +505,20 @@ public class MainActivity extends AppCompatActivity {
             logger.log("Log saved");
         } catch (Exception e) {
             e.printStackTrace();
-            logger.log("Exception:\n" + e.getMessage());
+            logger.log("Failed to write log: " + e.getMessage());
         }
         return file.getPath();
+    }
+
+    public void clearLogFile() {
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        try {
+            File file = new File(path, LOG_FILENAME);
+            file.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.log("Failed to clear log: " + e.getMessage());
+        }
     }
 
     public void shareLogFile(String filepath) {

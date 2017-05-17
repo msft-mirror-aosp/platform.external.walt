@@ -156,16 +156,20 @@ public class WaltDevice implements WaltConnection.ConnectionStateListener {
 
 
     private String sendReceive(char c) throws IOException {
-        connection.sendByte(c);
-        return readOne();
+        synchronized (connection) {
+            connection.sendByte(c);
+            return readOne();
+        }
     }
 
     public void sendAndFlush(char c) {
 
         try {
-            connection.sendByte(c);
-            while(connection.blockingRead(buffer) > 0) {
-                // flushing all incoming data
+            synchronized (connection) {
+                connection.sendByte(c);
+                while (connection.blockingRead(buffer) > 0) {
+                    // flushing all incoming data
+                }
             }
         } catch (Exception e) {
             logger.log("Exception in sendAndFlush: " + e.getMessage());
@@ -187,6 +191,7 @@ public class WaltDevice implements WaltConnection.ConnectionStateListener {
             throw new IOException("Unexpected response from WALT. Expected \"" + ack
                     + "\", got \"" + response + "\"");
         }
+        // Trim out the ack
         return response.substring(1).trim();
     }
 
@@ -237,6 +242,10 @@ public class WaltDevice implements WaltConnection.ConnectionStateListener {
             return;
         }
         connection.updateLag();
+        if (clock == null) {
+            // updateLag() will have logged a message if we get here
+            return;
+        }
         int drift = Math.abs(clock.getMeanLag());
         String msg = String.format("Remote clock delayed between %d and %d us",
                 clock.minLag, clock.maxLag);
@@ -321,11 +330,13 @@ public class WaltDevice implements WaltConnection.ConnectionStateListener {
         }
 
         void onReceiveRaw(String s) {
-            if (TriggerMessage.isTriggerString(s)) {
-                TriggerMessage tmsg = new TriggerMessage(s.substring(1).trim());
-                onReceive(tmsg);
-            } else {
-                Log.i(TAG, "Malformed trigger data: " + s);
+            for (String trigger : s.split("\n")) {
+                if (TriggerMessage.isTriggerString(trigger)) {
+                    TriggerMessage tmsg = new TriggerMessage(trigger.substring(1).trim());
+                    onReceive(tmsg);
+                } else {
+                    Log.i(TAG, "Malformed trigger data: " + s);
+                }
             }
         }
 
@@ -391,6 +402,12 @@ public class WaltDevice implements WaltConnection.ConnectionStateListener {
     }
 
     public void stopListener() {
+        // If the trigger listener is already stopped, then it is possible the listener thread is
+        // null. In that case, calling stop() followed by join() will result in a listener object
+        // that is stuck in the STOPPING state.
+        if (triggerListener.isStopped()) {
+            return;
+        }
         logger.log("Stopping Listener");
         triggerListener.stop();
         try {

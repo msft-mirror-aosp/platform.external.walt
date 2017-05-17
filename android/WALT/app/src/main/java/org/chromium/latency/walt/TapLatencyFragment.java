@@ -36,7 +36,7 @@ import java.util.Locale;
 import static org.chromium.latency.walt.Utils.getBooleanPreference;
 
 public class TapLatencyFragment extends Fragment
-    implements View.OnClickListener {
+        implements View.OnClickListener, RobotAutomationListener {
 
     private static final int ACTION_DOWN_INDEX = 0;
     private static final int ACTION_UP_INDEX = 1;
@@ -193,8 +193,8 @@ public class TapLatencyFragment extends Fragment
         }
 
         if (dt < 0 || dt > 200) {
-            logger.log(action + " bogus kernelTime, ignored, dt=" + dt);
-            return  false;
+            logger.log(action + " bogus kernelTime=" + e.kernelTime + ", ignored, dt=" + dt);
+            return false;
         }
         return true;
     }
@@ -302,5 +302,16 @@ public class TapLatencyFragment extends Fragment
             return;
         }
 
+    }
+
+    public void onRobotAutomationEvent(String event) {
+        // Never show the latency chart during automated runs.
+        shouldShowLatencyChart = false;
+        if (event.equals(RobotAutomationListener.RESTART_EVENT) ||
+                event.equals(RobotAutomationListener.START_EVENT)) {
+            restartMeasurement();
+        } else if (event.equals(RobotAutomationListener.FINISH_EVENT)) {
+            finishAndShowStats();
+        }
     }
 }
