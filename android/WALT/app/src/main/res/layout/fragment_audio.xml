@@ -21,7 +21,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
                 android:tint="@color/button_tint"
-                android:src="@drawable/ic_stop_black_24dp" />
+                walt:srcCompat="@drawable/ic_stop_black_24dp" />
 
             <ImageButton
                 android:id="@+id/button_start_audio"
@@ -29,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:tint="@color/button_tint"
-                android:src="@drawable/ic_play_arrow_black_24dp" />
+                walt:srcCompat="@drawable/ic_play_arrow_black_24dp" />
 
             <Spinner
                 android:id="@+id/spinner_audio_mode"
