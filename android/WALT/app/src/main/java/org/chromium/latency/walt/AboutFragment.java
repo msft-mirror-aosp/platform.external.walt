@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import java.util.Locale;
 
 import androidx.fragment.app.Fragment;
 
@@ -47,7 +48,7 @@ public class AboutFragment extends Fragment {
     public void onResume() {
         super.onResume();
         TextView textView = (TextView) getActivity().findViewById(R.id.txt_build_info);
-        String text = String.format("WALT v%s  (versionCode=%d)\n",
+        String text = String.format(Locale.US, "WALT v%s  (versionCode=%d)\n",
                 BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE);
         text += "WALT protocol version: " + WaltDevice.PROTOCOL_VERSION + "\n";
         text += "Android Build ID: " + Build.DISPLAY + "\n";

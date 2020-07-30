@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
         broadcastManager = LocalBroadcastManager.getInstance(this);
 
         // Add basic version and device info to the log
-        logger.log(String.format("WALT v%s  (versionCode=%d)",
+        logger.log(String.format(Locale.US, "WALT v%s  (versionCode=%d)",
                 BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));
         logger.log("WALT protocol version " + WaltDevice.PROTOCOL_VERSION);
         logger.log("DEVICE INFO:");
@@ -547,7 +547,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static boolean startsWithHttp(String url) {
-        return url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://");
+        return url.toLowerCase(Locale.getDefault()).startsWith("http://") ||
+            url.toLowerCase(Locale.getDefault()).startsWith("https://");
     }
 
     private void showUploadLogDialog() {

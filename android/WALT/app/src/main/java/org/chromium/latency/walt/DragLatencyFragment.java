@@ -16,6 +16,7 @@
 
 package org.chromium.latency.walt;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -68,6 +69,7 @@ public class DragLatencyFragment extends Fragment
         }
     };
 
+    @SuppressLint("ClickableViewAccessibility")
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -144,6 +146,7 @@ public class DragLatencyFragment extends Fragment
     /**
      * @return true if measurement was successfully started
      */
+    @SuppressLint("ClickableViewAccessibility")
     boolean startMeasurement() {
         logger.log("Starting drag latency test");
         try {
@@ -186,6 +189,7 @@ public class DragLatencyFragment extends Fragment
         updateCountsDisplay();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     void finishAndShowStats() {
         touchCatcher.stopAnimation();
         waltDevice.stopListener();
