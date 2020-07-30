@@ -51,6 +51,7 @@ import com.github.mikephil.charting.data.ScatterDataSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class AccelerometerFragment extends Fragment implements
         View.OnClickListener, SensorEventListener {
@@ -311,7 +312,7 @@ public class AccelerometerFragment extends Fragment implements
 
         double[] shifts = findShifts(phoneEntries, waltSmoothEntries);
         double bestShift = argmax(shifts) / 10d;
-        logger.log(String.format("Accelerometer latency: %.1fms", bestShift));
+        logger.log(String.format(Locale.US, "Accelerometer latency: %.1fms", bestShift));
 
         double[] deltasKernelToCallback = new double[phoneAccelerometerData.size()];
         for (int i = 0; i < deltasKernelToCallback.length; i++) {
@@ -320,7 +321,7 @@ public class AccelerometerFragment extends Fragment implements
         }
 
         logger.log(String.format(
-                "Mean kernel-to-callback latency: %.1fms", mean(deltasKernelToCallback)));
+            Locale.US, "Mean kernel-to-callback latency: %.1fms", mean(deltasKernelToCallback)));
 
         List<Entry> phoneEntriesShifted = new ArrayList<>();
         for (Entry e : phoneEntries) {

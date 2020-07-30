@@ -16,6 +16,7 @@
 
 package org.chromium.latency.walt;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -72,6 +73,7 @@ public class TapLatencyFragment extends Fragment
         }
     };
 
+    @SuppressLint("ClickableViewAccessibility")
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -213,6 +215,7 @@ public class TapLatencyFragment extends Fragment
         moveCountsView.setText(String.format(Locale.US, "⇄ %d", moveCount));
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     void restartMeasurement() {
         logger.log("\n## Restarting tap latency measurement. Re-sync clocks ...");
         try {
@@ -242,6 +245,7 @@ public class TapLatencyFragment extends Fragment
         tapCatcherView.setOnTouchListener(touchListener);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     void finishAndShowStats() {
         tapCatcherView.setOnTouchListener(null);
         waltDevice.checkDrift();
