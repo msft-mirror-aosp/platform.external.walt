@@ -119,7 +119,7 @@ public class UsMotionEvent {
     private long getEventTimeMicro(MotionEvent event) {
         long t_nanos = -1;
         try {
-            Class cls = Class.forName("android.view.MotionEvent");
+            Class<?> cls = Class.forName("android.view.MotionEvent");
             Method myTimeGetter = cls.getMethod("getEventTimeNano");
             t_nanos = (long) myTimeGetter.invoke(event);
         } catch (Exception e) {
@@ -132,7 +132,7 @@ public class UsMotionEvent {
     private long getHistoricalEventTimeMicro(MotionEvent event, int pos) {
         long t_nanos = -1;
         try {
-            Class cls = Class.forName("android.view.MotionEvent");
+            Class<?> cls = Class.forName("android.view.MotionEvent");
             Method myTimeGetter = cls.getMethod("getHistoricalEventTimeNano", new Class[] {int.class});
             t_nanos = (long) myTimeGetter.invoke(event, new Object[]{pos});
         } catch (Exception e) {
