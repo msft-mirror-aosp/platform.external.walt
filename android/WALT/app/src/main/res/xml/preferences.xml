@@ -1,5 +1,5 @@
 <android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:walt="http://schemas.android.com/apk/res/org.chromium.latency.walt">
+    xmlns:walt="http://schemas.android.com/apk/res-auto">
 
     <android.support.v7.preference.PreferenceScreen
         android:key="pref_general_screen"
