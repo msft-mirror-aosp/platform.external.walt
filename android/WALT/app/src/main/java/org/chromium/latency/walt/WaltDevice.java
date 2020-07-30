@@ -23,6 +23,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * A singleton used as an interface for the physical WALT device.
@@ -248,7 +249,7 @@ public class WaltDevice implements WaltConnection.ConnectionStateListener {
             return;
         }
         int drift = Math.abs(clock.getMeanLag());
-        String msg = String.format("Remote clock delayed between %d and %d us",
+        String msg = String.format(Locale.US, "Remote clock delayed between %d and %d us",
                 clock.minLag, clock.maxLag);
         // TODO: Convert the limit to user editable preference
         if (drift > DEFAULT_DRIFT_LIMIT_US) {
