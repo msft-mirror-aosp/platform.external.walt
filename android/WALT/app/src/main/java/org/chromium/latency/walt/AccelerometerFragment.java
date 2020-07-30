@@ -16,6 +16,12 @@
 
 package org.chromium.latency.walt;
 
+import static org.chromium.latency.walt.Utils.argmax;
+import static org.chromium.latency.walt.Utils.interp;
+import static org.chromium.latency.walt.Utils.max;
+import static org.chromium.latency.walt.Utils.mean;
+import static org.chromium.latency.walt.Utils.min;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -27,13 +33,14 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.support.v4.app.Fragment;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.ScatterChart;
 import com.github.mikephil.charting.components.Description;
@@ -44,12 +51,6 @@ import com.github.mikephil.charting.data.ScatterDataSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.chromium.latency.walt.Utils.argmax;
-import static org.chromium.latency.walt.Utils.interp;
-import static org.chromium.latency.walt.Utils.max;
-import static org.chromium.latency.walt.Utils.mean;
-import static org.chromium.latency.walt.Utils.min;
 
 public class AccelerometerFragment extends Fragment implements
         View.OnClickListener, SensorEventListener {
