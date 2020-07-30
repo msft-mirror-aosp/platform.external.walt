@@ -223,6 +223,19 @@ public class WaltDevice implements WaltConnection.ConnectionStateListener {
         }
     }
 
+    public void ping() throws IOException {
+        if (!isConnected() || clock == null) {
+            throw new IOException("Not connected to WALT");
+        }
+
+        long t1 = clock.micros();
+        command(CMD_PING);
+        long dt = clock.micros() - t1;
+        logger.log(String.format(Locale.US,
+                "Ping reply in %.1fms", dt / 1000.
+        ));
+    }
+
     public void syncClock() throws IOException {
         clock = connection.syncClock();
     }

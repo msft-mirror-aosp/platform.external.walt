@@ -355,13 +355,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickPing(View view) {
-        long t1 = waltDevice.clock.micros();
         try {
-            waltDevice.command(WaltDevice.CMD_PING);
-            long dt = waltDevice.clock.micros() - t1;
-            logger.log(String.format(Locale.US,
-                    "Ping reply in %.1fms", dt / 1000.
-            ));
+            waltDevice.ping();
         } catch (IOException e) {
             logger.log("Error sending ping: " + e.getMessage());
         }
