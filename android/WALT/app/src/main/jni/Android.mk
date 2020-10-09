@@ -13,5 +13,15 @@
 # limitations under the License.
 #
 
-APP_ABI := all
-APP_PLATFORM := android-21
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := sync_clock_jni
+LOCAL_SRC_FILES := sync_clock_jni.c sync_clock.c player.c
+
+LOCAL_CFLAGS := -g -DUSE_LIBLOG -Werror -Wno-deprecated-declarations
+
+LOCAL_LDLIBS := -lOpenSLES -llog
+
+include $(BUILD_SHARED_LIBRARY)
