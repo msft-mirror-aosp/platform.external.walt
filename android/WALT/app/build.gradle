@@ -9,8 +9,8 @@ android {
         applicationId "org.chromium.latency.walt"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 9
-        versionName "0.1.9"
+        versionCode 10
+        versionName "0.1.10"
     }
 
     externalNativeBuild.ndkBuild {

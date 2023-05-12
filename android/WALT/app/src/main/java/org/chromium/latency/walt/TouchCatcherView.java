@@ -28,6 +28,7 @@ import android.view.View;
 public class TouchCatcherView extends View {
 
     private Paint linePaint = new Paint();
+    private Paint centerLinePaint = new Paint(); // for positioning the laser
     private WaltDevice waltDevice;
     private boolean isAnimated = false;
 
@@ -54,8 +55,11 @@ public class TouchCatcherView extends View {
     private void initialisePaint() {
         float density = getResources().getDisplayMetrics().density;
         float lineWidth = 10f * density;
+        float centerLineWidth = 3f * density;
         linePaint.setColor(Color.GREEN);
         linePaint.setStrokeWidth(lineWidth);
+        centerLinePaint.setColor(Color.GREEN);
+        centerLinePaint.setStrokeWidth(centerLineWidth);
     }
 
     public static double markerPosition(long t_us, int period_us) {
@@ -88,11 +92,15 @@ public class TouchCatcherView extends View {
         int h = getHeight();
         double normPos = markerPosition(waltDevice.clock.micros(), animationPeriod_us);
         int pos = (int) (h * (0.5 + animationAmplitude * normPos));
+        int centerPos = (int) (h * 0.5);
         // Log.i("AnimatedView", "Pos is " + pos);
         int w = getWidth();
 
         int lineStart = (int) (w * (1 - lineLength) / 2);
         int lineEnd   = (int) (w * (1 + lineLength) / 2);
+
+        canvas.drawLine(0, centerPos, lineStart, centerPos, centerLinePaint);
+        canvas.drawLine(lineEnd, centerPos, w - 1, centerPos, centerLinePaint);
         canvas.drawLine(lineStart, pos, lineEnd, pos, linePaint);
 
         // Run every frame
