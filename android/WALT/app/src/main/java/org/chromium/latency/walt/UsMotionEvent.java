@@ -108,6 +108,31 @@ public class UsMotionEvent {
         return "UNKNOWN_ACTION";
     }
 
+    private long getEventTimeNanos(MotionEvent event, boolean preAndroidU) {
+        long t_nanos = -1;
+        final String methodName = preAndroidU ? "getEventTimeNano" : "getEventTimeNanos";
+        try {
+            Class<?> cls = Class.forName("android.view.MotionEvent");
+            Method myTimeGetter = cls.getMethod(methodName);
+            t_nanos = (long) myTimeGetter.invoke(event);
+        } catch (Exception e) {
+        }
+        return t_nanos;
+    }
+
+    private long getHistoricalEventTimeNanos(MotionEvent event, int pos, boolean preAndroidU) {
+        long t_nanos = -1;
+        final String methodName =
+                preAndroidU ? "getHistoricalEventTimeNano" : "getHistoricalEventTimeNanos";
+        try {
+            Class<?> cls = Class.forName("android.view.MotionEvent");
+            Method myTimeGetter = cls.getMethod(methodName, new Class[]{int.class});
+            t_nanos = (long) myTimeGetter.invoke(event, new Object[]{pos});
+        } catch (Exception e) {
+        }
+        return t_nanos;
+    }
+
     /**
      MotionEvent.getEventTime() function only provides millisecond resolution.
      There is a MotionEvent.getEventTimeNano() function but for some reason it
@@ -119,27 +144,25 @@ public class UsMotionEvent {
      */
     private long getEventTimeMicro(MotionEvent event) {
         long t_nanos = -1;
-        try {
-            Class<?> cls = Class.forName("android.view.MotionEvent");
-            Method myTimeGetter = cls.getMethod("getEventTimeNano");
-            t_nanos = (long) myTimeGetter.invoke(event);
-        } catch (Exception e) {
-            Log.i("WALT.MsMotionEvent", e.getMessage());
+        t_nanos = getEventTimeNanos(event, false);
+        if (t_nanos == -1) {
+            t_nanos = getEventTimeNanos(event, true);
+            if (t_nanos == -1) {
+                Log.i("WALT.UsMotionEvent", "getEventTimeNanos failed.");
+            }
         }
-
         return t_nanos / 1000;
     }
 
     private long getHistoricalEventTimeMicro(MotionEvent event, int pos) {
         long t_nanos = -1;
-        try {
-            Class<?> cls = Class.forName("android.view.MotionEvent");
-            Method myTimeGetter = cls.getMethod("getHistoricalEventTimeNano", new Class[] {int.class});
-            t_nanos = (long) myTimeGetter.invoke(event, new Object[]{pos});
-        } catch (Exception e) {
-            Log.i("WALT.MsMotionEvent", e.getMessage());
+        t_nanos = getHistoricalEventTimeNanos(event, pos, false);
+        if (t_nanos == -1) {
+            t_nanos = getHistoricalEventTimeNanos(event, pos, true);
+            if (t_nanos == -1) {
+                Log.i("WALT.UsMotionEvent", "getHistoricalEventTimeNanos failed.");
+            }
         }
-
         return t_nanos / 1000;
     }
 
