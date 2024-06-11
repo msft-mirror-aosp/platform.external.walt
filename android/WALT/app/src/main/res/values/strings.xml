@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WALT</string>
+    <string name="app_name">WALT v0.1.10</string>
 
     <string name="title_activity_crash_log">Crash Log</string>
     <string name="protocol_version_mismatch">WALT reports protocol version %1$s, which is not
